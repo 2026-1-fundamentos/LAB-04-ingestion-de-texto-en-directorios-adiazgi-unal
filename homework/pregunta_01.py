@@ -71,3 +71,67 @@ def pregunta_01():
 
 
     """
+
+import os
+import zipfile
+import pandas as pd
+
+
+def pregunta_01():
+    """
+    Descomprime files/input.zip y genera los archivos:
+
+        files/output/train_dataset.csv
+        files/output/test_dataset.csv
+
+    con las columnas:
+        phrase
+        target
+    """
+
+    # Crear carpeta output
+    os.makedirs("files/output", exist_ok=True)
+
+    # Descomprimir el archivo zip
+    with zipfile.ZipFile("files/input.zip", "r") as zip_ref:
+        zip_ref.extractall("files")
+
+    # Procesar train y test
+    for dataset in ["train", "test"]:
+
+        registros = []
+
+        dataset_path = os.path.join("files", "input", dataset)
+
+        for target in ["negative", "neutral", "positive"]:
+
+            target_path = os.path.join(dataset_path, target)
+
+            if not os.path.exists(target_path):
+                continue
+
+            for filename in os.listdir(target_path):
+
+                if filename.endswith(".txt"):
+
+                    filepath = os.path.join(target_path, filename)
+
+                    with open(filepath, "r", encoding="utf-8") as file:
+                        phrase = file.read().strip()
+
+                    registros.append(
+                        {
+                            "phrase": phrase,
+                            "target": target,
+                        }
+                    )
+
+        df = pd.DataFrame(registros)
+
+        # Mantener orden exacto de columnas
+        df = df[["phrase", "target"]]
+
+        df.to_csv(
+            f"files/output/{dataset}_dataset.csv",
+            index=False,
+        )
